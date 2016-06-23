@@ -146,45 +146,42 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     </style>
 
-      <div class="upload layout horizontal">
-        <!--noink because OS X file upload dialog animation makes ink animation stuck-->
-<!--         <paper-fab mini noink icon="file-upload" class="blue" on-tap="on_upload_dialog"></paper-fab> -->
+    <div class="upload layout horizontal">
+      <!--noink because OS X file upload dialog animation makes ink animation stuck-->
+      <!--         <paper-fab mini noink icon="file-upload" class="blue" on-tap="on_upload_dialog"></paper-fab>
+    -->
+    <paper-button raised class="blue center" on-tap="on_upload_dialog">Choose file</paper-button>
+    <paper-button on-tap='onUpload' raised class='' disabled$='{{!file}}'>
+      <iron-icon icon='file-upload'></iron-icon>
+      Upload
+    </paper-button>
+    <!-- <span id='previewThumb' class='previews'></span>
+  -->
+</div>
+<input type="file" id="fileInput" on-change="fileChange" hidden accept="image/x-png, image/gif, image/jpeg" >
 
-        <paper-button raised class="blue center" on-tap="on_upload_dialog">
-          Choose file
-        </paper-button>
-        <paper-button on-tap='onUpload' raised class='' disabled$='{{!file}}'>
-          <iron-icon icon='file-upload'></iron-icon>
-        Upload
-        </paper-button>
-        <!-- <span id='previewThumb' class='previews'></span> -->
-      </div>
-    <input type="file" id="fileInput" on-change="fileChange" hidden accept="image/x-png, image/gif, image/jpeg" >
+<div hidden$='{{!file}}'>
 
+  <div class='layout_ horizontal_'>
+    <div class='flex_ cropperContainer' id='cropperContainer'></div>
+    &nbsp;
+    <!-- <div class="layout_ vertical_ center-justified_">
+    -->
+    <!-- <div id="previewSmall" class="previewSmall"></div>
+  -->
+  <div class="layout horizontal center-justified_"></div>
+  <!-- <paper-button on-tap='onUpload' raised class=''>Upload</paper-button>
+-->
+<!-- <paper-progress value="{{progress}}"></paper-progress>
+-->
+</div>
 
-    <div hidden$='{{!file}}'>
+<paper-toast id="toastSuccess" text="Image uploaded successfully!"></paper-toast>
+<paper-toast id="toastFail" text="Error uploading file!"></paper-toast>
+</div>
 
-      <div class='layout_ horizontal_'>
-        <div class='flex_ cropperContainer' id='cropperContainer'> </div>
-        &nbsp;
-        <!-- <div class="layout_ vertical_ center-justified_"> -->
-        <!-- <div id="previewSmall" class="previewSmall"></div> -->
-
-        <div class="layout horizontal center-justified_"> </div>
-        <!-- <paper-button on-tap='onUpload' raised class=''>Upload</paper-button> -->
-
-          <!-- <paper-progress value="{{progress}}"></paper-progress> -->
-
-
-      </div>
-
-      <paper-toast id="toastSuccess" text="Image uploaded successfully!"></paper-toast>
-      <paper-toast id="toastFail" text="Error uploading file!"></paper-toast>
-    </div>
-
-
-  </template>
-  <script>
+</template>
+<script>
   (function() {
     'use strict';
 
@@ -408,31 +405,34 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         var fullQuality = canvas.toDataURL('image/jpeg', 1.0);
 
         var blob = dataURItoBlob(fullQuality);
-        var fd = new FormData();
 
-        fd.append('file', blob);
+        this.fire('upload',blob);
 
-        var xhr = this.xhr = new XMLHttpRequest();
-        xhr.upload.addEventListener('progress', function(e) {
-          var done = e.loaded, total = e.total;
-          self.progress = Math.floor(done/total*1000)/10;
-        });
-        xhr.open('POST', this.uploadUrl, true);
-        if (this.authToken) {
-          xhr.setRequestHeader('Authorization','Bearer ' + this.authToken);
-        }
-        xhr.onload = function() {
-          if (xhr.status === 200) {
-            self.$.toastSuccess.show();
-            // self.fire('success', {xhr: xhr});
-            self.fire('iron-signal', {name: 'imageupload', data: xhr});
-          } else {
-            self.$.toastFail.show();
-            self.fire('error', {xhr: xhr});
-          }
-        };
-        this.progressInvisible = false;
-        xhr.send(fd);
+        // var fd = new FormData();
+
+        // fd.append('file', blob);
+
+        // var xhr = this.xhr = new XMLHttpRequest();
+        // xhr.upload.addEventListener('progress', function(e) {
+        //   var done = e.loaded, total = e.total;
+        //   self.progress = Math.floor(done/total*1000)/10;
+        // });
+        // xhr.open('POST', this.uploadUrl, true);
+        // if (this.authToken) {
+        //   xhr.setRequestHeader('Authorization','Bearer ' + this.authToken);
+        // }
+        // xhr.onload = function() {
+        //   if (xhr.status === 200) {
+        //     self.$.toastSuccess.show();
+        //     // self.fire('success', {xhr: xhr});
+        //     self.fire('iron-signal', {name: 'imageupload', data: xhr});
+        //   } else {
+        //     self.$.toastFail.show();
+        //     self.fire('error', {xhr: xhr});
+        //   }
+        // };
+        // this.progressInvisible = false;
+        // xhr.send(fd);
 
       },
       _updateUI: function() {
@@ -585,13 +585,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             this.onComplete(this.getInfo());
       },
       _onTrack: function(e) {
+           e.stopPropagation();
+            e.preventDefault();
             if (!this.dragging) {return;}
             if (this.dragging === 'move') {this._doTrack(e);}
             else {this._doTrackResize(e);}
             this._updateUI();
             // this.onChange && this.onChange(this.getInfo());
             this.onChange(this.getInfo());
-            e.preventDefault();
+//            debugger;
+           
+//            e.preventDefault();
       },
       _doTrack: function(e) {
             var s = this.cropNode.style,
@@ -740,7 +744,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 context[callback](evt);
             }
             if(node.attachEvent) {node.attachEvent('on' + evtType, handler);}
-            else {node.addEventListener(evtType, handler, false);}
+            else {node.addEventListener(evtType, handler, true);}
         },
         style: function(node, args){
             if(typeof args === 'string'){
@@ -812,9 +816,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 
   })();
-  </script>
-</dom-module>
-
+  </script></dom-module>
 
 <!--
 
@@ -875,7 +877,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             if (t < 0) t = 0;
             var maxL = this.domNode.offsetWidth - this.cropNode.offsetWidth;
             var maxT = this.domNode.offsetHeight - this.cropNode.offsetHeight;
-            if (l > maxL) l = maxL;
+            if (l >
+maxL) l = maxL;
             if (t > maxT) t = maxT;
             s.left = l + 'px';
             s.top = t + 'px'
@@ -901,7 +904,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             if (ratio){
                 if (m == 'l') {
                     dy = dx/ratio;
-                    if (p0.l + dx < 0) {dx = -p0.l; dy = dx / ratio;}
+                    if (p0.l + dx
+< 0) {dx = -p0.l; dy = dx / ratio;}
                     if (p0.t + dy < 0) {dy = -p0.t; dx = dy * ratio;}
                     m = 'lt';
                 } else if (m == 'r') {
@@ -911,14 +915,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     dx = dy*ratio;
                     m = 'rb';
                 } else if (m == 'lt') {
-                    dx = Math.abs(dx) > Math.abs(dy) ? dx : dy;
+                    dx = Math.abs(dx) >
+Math.abs(dy) ? dx : dy;
                     dy = dx/ratio;
-                    if (p0.l + dx < 0) {dx = -p0.l; dy = dx / ratio;}
+                    if (p0.l + dx
+< 0) {dx = -p0.l; dy = dx / ratio;}
                     if (p0.t + dy < 0) {dy = -p0.t; dx = dy * ratio;}
                 } else if (m == 'lb') {
-                    dx = Math.abs(dx) > Math.abs(dy) ? dx : -dy;
+                    dx = Math.abs(dx) >
+Math.abs(dy) ? dx : -dy;
                     dy = -dx/ratio;
-                    if (p0.l + dx < 0) {
+                    if (p0.l + dx
+< 0) {
                         dx = -p0.l;
                         dy = p0.l;
                     }
@@ -933,7 +941,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             }
             if (/l/.test(m)) {
                 dx = Math.min(dx, p0.w - this.minWidth);
-                if (p0.l + dx >= 0) {
+                if (p0.l + dx >
+= 0) {
                     s.left = p0.l + dx + 'px';
                     s.width = p0.w - dx + 'px';
                 } else {
@@ -953,7 +962,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             }
             if (/r/.test(m)) {
                 dx = Math.max(dx, this.minWidth - p0.w);
-                if (p0.l + p0.w + dx <= this.domNode.offsetWidth) {
+                if (p0.l + p0.w + dx
+<= this.domNode.offsetWidth) {
                     s.width = p0.w + dx + 'px';
                 } else {
                     s.width = this.domNode.offsetWidth - p0.l - 2 + 'px';
